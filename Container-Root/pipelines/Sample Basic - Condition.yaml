@@ -1,0 +1,433 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: pipeline-flip-coin-
+spec:
+  arguments:
+    parameters: []
+  entrypoint: pipeline-flip-coin
+  serviceAccountName: pipeline-runner
+  templates:
+  - dag:
+      tasks:
+      - arguments:
+          parameters:
+          - name: flip-output
+            value: '{{inputs.parameters.flip-output}}'
+          - name: random-number-output
+            value: '{{tasks.random-number.outputs.parameters.random-number-output}}'
+        dependencies:
+        - random-number
+        name: condition-2
+        template: condition-2
+        when: '{{tasks.random-number.outputs.parameters.random-number-output}} > 5'
+      - arguments:
+          parameters:
+          - name: flip-output
+            value: '{{inputs.parameters.flip-output}}'
+          - name: random-number-output
+            value: '{{tasks.random-number.outputs.parameters.random-number-output}}'
+        dependencies:
+        - random-number
+        name: condition-3
+        template: condition-3
+        when: '{{tasks.random-number.outputs.parameters.random-number-output}} <=
+          5'
+      - arguments:
+          parameters:
+          - name: flip-output
+            value: '{{inputs.parameters.flip-output}}'
+        name: random-number
+        template: random-number
+    inputs:
+      parameters:
+      - name: flip-output
+    name: condition-1
+  - dag:
+      tasks:
+      - arguments:
+          parameters:
+          - name: flip-output
+            value: '{{inputs.parameters.flip-output}}'
+          - name: random-number-output
+            value: '{{inputs.parameters.random-number-output}}'
+        name: print
+        template: print
+    inputs:
+      parameters:
+      - name: flip-output
+      - name: random-number-output
+    name: condition-2
+  - dag:
+      tasks:
+      - arguments:
+          parameters:
+          - name: flip-output
+            value: '{{inputs.parameters.flip-output}}'
+          - name: random-number-output
+            value: '{{inputs.parameters.random-number-output}}'
+        name: print-2
+        template: print-2
+    inputs:
+      parameters:
+      - name: flip-output
+      - name: random-number-output
+    name: condition-3
+  - dag:
+      tasks:
+      - arguments:
+          parameters:
+          - name: flip-output
+            value: '{{inputs.parameters.flip-output}}'
+          - name: random-number-2-output
+            value: '{{tasks.random-number-2.outputs.parameters.random-number-2-output}}'
+        dependencies:
+        - random-number-2
+        name: condition-5
+        template: condition-5
+        when: '{{tasks.random-number-2.outputs.parameters.random-number-2-output}}
+          > 15'
+      - arguments:
+          parameters:
+          - name: flip-output
+            value: '{{inputs.parameters.flip-output}}'
+          - name: random-number-2-output
+            value: '{{tasks.random-number-2.outputs.parameters.random-number-2-output}}'
+        dependencies:
+        - random-number-2
+        name: condition-6
+        template: condition-6
+        when: '{{tasks.random-number-2.outputs.parameters.random-number-2-output}}
+          <= 15'
+      - arguments:
+          parameters:
+          - name: flip-output
+            value: '{{inputs.parameters.flip-output}}'
+        name: random-number-2
+        template: random-number-2
+    inputs:
+      parameters:
+      - name: flip-output
+    name: condition-4
+  - dag:
+      tasks:
+      - arguments:
+          parameters:
+          - name: flip-output
+            value: '{{inputs.parameters.flip-output}}'
+          - name: random-number-2-output
+            value: '{{inputs.parameters.random-number-2-output}}'
+        name: print-2-3
+        template: print-2-3
+    inputs:
+      parameters:
+      - name: flip-output
+      - name: random-number-2-output
+    name: condition-5
+  - dag:
+      tasks:
+      - arguments:
+          parameters:
+          - name: flip-output
+            value: '{{inputs.parameters.flip-output}}'
+          - name: random-number-2-output
+            value: '{{inputs.parameters.random-number-2-output}}'
+        name: print-2-3-4
+        template: print-2-3-4
+    inputs:
+      parameters:
+      - name: flip-output
+      - name: random-number-2-output
+    name: condition-6
+  - container:
+      args:
+      - python -c "import random; result = 'heads' if random.randint(0,1) == 0 else
+        'tails'; print(result)" | tee /tmp/output
+      command:
+      - sh
+      - -c
+      image: python:alpine3.6
+    name: flip
+    outputs:
+      artifacts:
+      - name: mlpipeline-ui-metadata
+        path: /mlpipeline-ui-metadata.json
+        s3:
+          accessKeySecret:
+            key: accesskey
+            name: mlpipeline-minio-artifact
+          bucket: mlpipeline
+          endpoint: minio-service.kubeflow:9000
+          insecure: true
+          key: runs/{{workflow.uid}}/{{pod.name}}/mlpipeline-ui-metadata.tgz
+          secretKeySecret:
+            key: secretkey
+            name: mlpipeline-minio-artifact
+      - name: mlpipeline-metrics
+        path: /mlpipeline-metrics.json
+        s3:
+          accessKeySecret:
+            key: accesskey
+            name: mlpipeline-minio-artifact
+          bucket: mlpipeline
+          endpoint: minio-service.kubeflow:9000
+          insecure: true
+          key: runs/{{workflow.uid}}/{{pod.name}}/mlpipeline-metrics.tgz
+          secretKeySecret:
+            key: secretkey
+            name: mlpipeline-minio-artifact
+      parameters:
+      - name: flip-output
+        valueFrom:
+          path: /tmp/output
+  - dag:
+      tasks:
+      - arguments:
+          parameters:
+          - name: flip-output
+            value: '{{tasks.flip.outputs.parameters.flip-output}}'
+        dependencies:
+        - flip
+        name: condition-1
+        template: condition-1
+        when: '{{tasks.flip.outputs.parameters.flip-output}} == heads'
+      - arguments:
+          parameters:
+          - name: flip-output
+            value: '{{tasks.flip.outputs.parameters.flip-output}}'
+        dependencies:
+        - flip
+        name: condition-4
+        template: condition-4
+        when: '{{tasks.flip.outputs.parameters.flip-output}} == tails'
+      - name: flip
+        template: flip
+    name: pipeline-flip-coin
+  - container:
+      command:
+      - echo
+      - heads and {{inputs.parameters.random-number-output}} > 5!
+      image: alpine:3.6
+    inputs:
+      parameters:
+      - name: random-number-output
+    name: print
+    outputs:
+      artifacts:
+      - name: mlpipeline-ui-metadata
+        path: /mlpipeline-ui-metadata.json
+        s3:
+          accessKeySecret:
+            key: accesskey
+            name: mlpipeline-minio-artifact
+          bucket: mlpipeline
+          endpoint: minio-service.kubeflow:9000
+          insecure: true
+          key: runs/{{workflow.uid}}/{{pod.name}}/mlpipeline-ui-metadata.tgz
+          secretKeySecret:
+            key: secretkey
+            name: mlpipeline-minio-artifact
+      - name: mlpipeline-metrics
+        path: /mlpipeline-metrics.json
+        s3:
+          accessKeySecret:
+            key: accesskey
+            name: mlpipeline-minio-artifact
+          bucket: mlpipeline
+          endpoint: minio-service.kubeflow:9000
+          insecure: true
+          key: runs/{{workflow.uid}}/{{pod.name}}/mlpipeline-metrics.tgz
+          secretKeySecret:
+            key: secretkey
+            name: mlpipeline-minio-artifact
+  - container:
+      command:
+      - echo
+      - heads and {{inputs.parameters.random-number-output}} <= 5!
+      image: alpine:3.6
+    inputs:
+      parameters:
+      - name: random-number-output
+    name: print-2
+    outputs:
+      artifacts:
+      - name: mlpipeline-ui-metadata
+        path: /mlpipeline-ui-metadata.json
+        s3:
+          accessKeySecret:
+            key: accesskey
+            name: mlpipeline-minio-artifact
+          bucket: mlpipeline
+          endpoint: minio-service.kubeflow:9000
+          insecure: true
+          key: runs/{{workflow.uid}}/{{pod.name}}/mlpipeline-ui-metadata.tgz
+          secretKeySecret:
+            key: secretkey
+            name: mlpipeline-minio-artifact
+      - name: mlpipeline-metrics
+        path: /mlpipeline-metrics.json
+        s3:
+          accessKeySecret:
+            key: accesskey
+            name: mlpipeline-minio-artifact
+          bucket: mlpipeline
+          endpoint: minio-service.kubeflow:9000
+          insecure: true
+          key: runs/{{workflow.uid}}/{{pod.name}}/mlpipeline-metrics.tgz
+          secretKeySecret:
+            key: secretkey
+            name: mlpipeline-minio-artifact
+  - container:
+      command:
+      - echo
+      - tails and {{inputs.parameters.random-number-2-output}} > 15!
+      image: alpine:3.6
+    inputs:
+      parameters:
+      - name: random-number-2-output
+    name: print-2-3
+    outputs:
+      artifacts:
+      - name: mlpipeline-ui-metadata
+        path: /mlpipeline-ui-metadata.json
+        s3:
+          accessKeySecret:
+            key: accesskey
+            name: mlpipeline-minio-artifact
+          bucket: mlpipeline
+          endpoint: minio-service.kubeflow:9000
+          insecure: true
+          key: runs/{{workflow.uid}}/{{pod.name}}/mlpipeline-ui-metadata.tgz
+          secretKeySecret:
+            key: secretkey
+            name: mlpipeline-minio-artifact
+      - name: mlpipeline-metrics
+        path: /mlpipeline-metrics.json
+        s3:
+          accessKeySecret:
+            key: accesskey
+            name: mlpipeline-minio-artifact
+          bucket: mlpipeline
+          endpoint: minio-service.kubeflow:9000
+          insecure: true
+          key: runs/{{workflow.uid}}/{{pod.name}}/mlpipeline-metrics.tgz
+          secretKeySecret:
+            key: secretkey
+            name: mlpipeline-minio-artifact
+  - container:
+      command:
+      - echo
+      - tails and {{inputs.parameters.random-number-2-output}} <= 15!
+      image: alpine:3.6
+    inputs:
+      parameters:
+      - name: random-number-2-output
+    name: print-2-3-4
+    outputs:
+      artifacts:
+      - name: mlpipeline-ui-metadata
+        path: /mlpipeline-ui-metadata.json
+        s3:
+          accessKeySecret:
+            key: accesskey
+            name: mlpipeline-minio-artifact
+          bucket: mlpipeline
+          endpoint: minio-service.kubeflow:9000
+          insecure: true
+          key: runs/{{workflow.uid}}/{{pod.name}}/mlpipeline-ui-metadata.tgz
+          secretKeySecret:
+            key: secretkey
+            name: mlpipeline-minio-artifact
+      - name: mlpipeline-metrics
+        path: /mlpipeline-metrics.json
+        s3:
+          accessKeySecret:
+            key: accesskey
+            name: mlpipeline-minio-artifact
+          bucket: mlpipeline
+          endpoint: minio-service.kubeflow:9000
+          insecure: true
+          key: runs/{{workflow.uid}}/{{pod.name}}/mlpipeline-metrics.tgz
+          secretKeySecret:
+            key: secretkey
+            name: mlpipeline-minio-artifact
+  - container:
+      args:
+      - python -c "import random; print(random.randint(0,9))" | tee /tmp/output
+      command:
+      - sh
+      - -c
+      image: python:alpine3.6
+    name: random-number
+    outputs:
+      artifacts:
+      - name: mlpipeline-ui-metadata
+        path: /mlpipeline-ui-metadata.json
+        s3:
+          accessKeySecret:
+            key: accesskey
+            name: mlpipeline-minio-artifact
+          bucket: mlpipeline
+          endpoint: minio-service.kubeflow:9000
+          insecure: true
+          key: runs/{{workflow.uid}}/{{pod.name}}/mlpipeline-ui-metadata.tgz
+          secretKeySecret:
+            key: secretkey
+            name: mlpipeline-minio-artifact
+      - name: mlpipeline-metrics
+        path: /mlpipeline-metrics.json
+        s3:
+          accessKeySecret:
+            key: accesskey
+            name: mlpipeline-minio-artifact
+          bucket: mlpipeline
+          endpoint: minio-service.kubeflow:9000
+          insecure: true
+          key: runs/{{workflow.uid}}/{{pod.name}}/mlpipeline-metrics.tgz
+          secretKeySecret:
+            key: secretkey
+            name: mlpipeline-minio-artifact
+      parameters:
+      - name: random-number-output
+        valueFrom:
+          path: /tmp/output
+  - container:
+      args:
+      - python -c "import random; print(random.randint(10,19))" | tee /tmp/output
+      command:
+      - sh
+      - -c
+      image: python:alpine3.6
+    name: random-number-2
+    outputs:
+      artifacts:
+      - name: mlpipeline-ui-metadata
+        path: /mlpipeline-ui-metadata.json
+        s3:
+          accessKeySecret:
+            key: accesskey
+            name: mlpipeline-minio-artifact
+          bucket: mlpipeline
+          endpoint: minio-service.kubeflow:9000
+          insecure: true
+          key: runs/{{workflow.uid}}/{{pod.name}}/mlpipeline-ui-metadata.tgz
+          secretKeySecret:
+            key: secretkey
+            name: mlpipeline-minio-artifact
+      - name: mlpipeline-metrics
+        path: /mlpipeline-metrics.json
+        s3:
+          accessKeySecret:
+            key: accesskey
+            name: mlpipeline-minio-artifact
+          bucket: mlpipeline
+          endpoint: minio-service.kubeflow:9000
+          insecure: true
+          key: runs/{{workflow.uid}}/{{pod.name}}/mlpipeline-metrics.tgz
+          secretKeySecret:
+            key: secretkey
+            name: mlpipeline-minio-artifact
+      parameters:
+      - name: random-number-2-output
+        valueFrom:
+          path: /tmp/output

@@ -1,0 +1,666 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: tfx-taxi-cab-classification-pipeline-example-
+spec:
+  arguments:
+    parameters:
+    - name: output
+    - name: project
+    - name: column-names
+      value: gs://ml-pipeline-playground/tfx/taxi-cab-classification/column-names.json
+    - name: key-columns
+      value: trip_start_timestamp
+    - name: train
+      value: gs://ml-pipeline-playground/tfx/taxi-cab-classification/train.csv
+    - name: evaluation
+      value: gs://ml-pipeline-playground/tfx/taxi-cab-classification/eval.csv
+    - name: mode
+      value: local
+    - name: preprocess-module
+      value: gs://ml-pipeline-playground/tfx/taxi-cab-classification/preprocessing.py
+    - name: learning-rate
+      value: '0.1'
+    - name: hidden-layer-size
+      value: '1500'
+    - name: steps
+      value: '3000'
+    - name: analyze-slice-column
+      value: trip_start_hour
+  entrypoint: tfx-taxi-cab-classification-pipeline-example
+  serviceAccountName: pipeline-runner
+  templates:
+  - container:
+      args:
+      - --model
+      - '{{inputs.parameters.training-train}}'
+      - --eval
+      - '{{inputs.parameters.evaluation}}'
+      - --schema
+      - '{{inputs.parameters.validation-schema}}'
+      - --project
+      - '{{inputs.parameters.project}}'
+      - --mode
+      - '{{inputs.parameters.mode}}'
+      - --slice-columns
+      - '{{inputs.parameters.analyze-slice-column}}'
+      - --output
+      - '{{inputs.parameters.output}}/{{workflow.name}}/analysis'
+      env:
+      - name: GOOGLE_APPLICATION_CREDENTIALS
+        value: /secret/gcp-credentials/user-gcp-sa.json
+      - name: CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE
+        value: /secret/gcp-credentials/user-gcp-sa.json
+      image: gcr.io/ml-pipeline/ml-pipeline-dataflow-tfma:6ad2601ec7d04e842c212c50d5c78e548e12ddea
+      volumeMounts:
+      - mountPath: /secret/gcp-credentials
+        name: gcp-credentials
+    inputs:
+      parameters:
+      - name: analyze-slice-column
+      - name: evaluation
+      - name: mode
+      - name: output
+      - name: project
+      - name: training-train
+      - name: validation-schema
+    name: analysis
+    outputs:
+      artifacts:
+      - name: mlpipeline-ui-metadata
+        path: /mlpipeline-ui-metadata.json
+        s3:
+          accessKeySecret:
+            key: accesskey
+            name: mlpipeline-minio-artifact
+          bucket: mlpipeline
+          endpoint: minio-service.kubeflow:9000
+          insecure: true
+          key: runs/{{workflow.uid}}/{{pod.name}}/mlpipeline-ui-metadata.tgz
+          secretKeySecret:
+            key: secretkey
+            name: mlpipeline-minio-artifact
+      - name: mlpipeline-metrics
+        path: /mlpipeline-metrics.json
+        s3:
+          accessKeySecret:
+            key: accesskey
+            name: mlpipeline-minio-artifact
+          bucket: mlpipeline
+          endpoint: minio-service.kubeflow:9000
+          insecure: true
+          key: runs/{{workflow.uid}}/{{pod.name}}/mlpipeline-metrics.tgz
+          secretKeySecret:
+            key: secretkey
+            name: mlpipeline-minio-artifact
+      parameters:
+      - name: analysis-analysis
+        valueFrom:
+          path: /output.txt
+  - container:
+      args:
+      - --output
+      - '{{inputs.parameters.output}}/{{workflow.name}}/confusionmatrix'
+      - --predictions
+      - '{{inputs.parameters.prediction-prediction}}'
+      - --target_lambda
+      - 'lambda x: (x[''target''] > x[''fare''] * 0.2)'
+      env:
+      - name: GOOGLE_APPLICATION_CREDENTIALS
+        value: /secret/gcp-credentials/user-gcp-sa.json
+      - name: CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE
+        value: /secret/gcp-credentials/user-gcp-sa.json
+      image: gcr.io/ml-pipeline/ml-pipeline-local-confusion-matrix:5df2cdc1ed145320204e8bc73b59cdbd7b3da28f
+      volumeMounts:
+      - mountPath: /secret/gcp-credentials
+        name: gcp-credentials
+    inputs:
+      parameters:
+      - name: output
+      - name: prediction-prediction
+    name: confusion-matrix
+    outputs:
+      artifacts:
+      - name: mlpipeline-ui-metadata
+        path: /mlpipeline-ui-metadata.json
+        s3:
+          accessKeySecret:
+            key: accesskey
+            name: mlpipeline-minio-artifact
+          bucket: mlpipeline
+          endpoint: minio-service.kubeflow:9000
+          insecure: true
+          key: runs/{{workflow.uid}}/{{pod.name}}/mlpipeline-ui-metadata.tgz
+          secretKeySecret:
+            key: secretkey
+            name: mlpipeline-minio-artifact
+      - name: mlpipeline-metrics
+        path: /mlpipeline-metrics.json
+        s3:
+          accessKeySecret:
+            key: accesskey
+            name: mlpipeline-minio-artifact
+          bucket: mlpipeline
+          endpoint: minio-service.kubeflow:9000
+          insecure: true
+          key: runs/{{workflow.uid}}/{{pod.name}}/mlpipeline-metrics.tgz
+          secretKeySecret:
+            key: secretkey
+            name: mlpipeline-minio-artifact
+  - container:
+      args:
+      - --model-path
+      - '{{inputs.parameters.training-train}}'
+      - --server-name
+      - taxi-cab-classification-model-{{workflow.uid}}
+      env:
+      - name: GOOGLE_APPLICATION_CREDENTIALS
+        value: /secret/gcp-credentials/user-gcp-sa.json
+      - name: CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE
+        value: /secret/gcp-credentials/user-gcp-sa.json
+      image: gcr.io/ml-pipeline/ml-pipeline-kubeflow-deployer:5df2cdc1ed145320204e8bc73b59cdbd7b3da28f
+      volumeMounts:
+      - mountPath: /secret/gcp-credentials
+        name: gcp-credentials
+    inputs:
+      parameters:
+      - name: training-train
+    name: deploy
+    outputs:
+      artifacts:
+      - name: mlpipeline-ui-metadata
+        path: /mlpipeline-ui-metadata.json
+        s3:
+          accessKeySecret:
+            key: accesskey
+            name: mlpipeline-minio-artifact
+          bucket: mlpipeline
+          endpoint: minio-service.kubeflow:9000
+          insecure: true
+          key: runs/{{workflow.uid}}/{{pod.name}}/mlpipeline-ui-metadata.tgz
+          secretKeySecret:
+            key: secretkey
+            name: mlpipeline-minio-artifact
+      - name: mlpipeline-metrics
+        path: /mlpipeline-metrics.json
+        s3:
+          accessKeySecret:
+            key: accesskey
+            name: mlpipeline-minio-artifact
+          bucket: mlpipeline
+          endpoint: minio-service.kubeflow:9000
+          insecure: true
+          key: runs/{{workflow.uid}}/{{pod.name}}/mlpipeline-metrics.tgz
+          secretKeySecret:
+            key: secretkey
+            name: mlpipeline-minio-artifact
+  - container:
+      args:
+      - --data
+      - '{{inputs.parameters.evaluation}}'
+      - --schema
+      - '{{inputs.parameters.validation-schema}}'
+      - --target
+      - tips
+      - --model
+      - '{{inputs.parameters.training-train}}'
+      - --mode
+      - '{{inputs.parameters.mode}}'
+      - --project
+      - '{{inputs.parameters.project}}'
+      - --output
+      - '{{inputs.parameters.output}}/{{workflow.name}}/predict'
+      env:
+      - name: GOOGLE_APPLICATION_CREDENTIALS
+        value: /secret/gcp-credentials/user-gcp-sa.json
+      - name: CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE
+        value: /secret/gcp-credentials/user-gcp-sa.json
+      image: gcr.io/ml-pipeline/ml-pipeline-dataflow-tf-predict:6ad2601ec7d04e842c212c50d5c78e548e12ddea
+      volumeMounts:
+      - mountPath: /secret/gcp-credentials
+        name: gcp-credentials
+    inputs:
+      parameters:
+      - name: evaluation
+      - name: mode
+      - name: output
+      - name: project
+      - name: training-train
+      - name: validation-schema
+    name: prediction
+    outputs:
+      artifacts:
+      - name: mlpipeline-ui-metadata
+        path: /mlpipeline-ui-metadata.json
+        s3:
+          accessKeySecret:
+            key: accesskey
+            name: mlpipeline-minio-artifact
+          bucket: mlpipeline
+          endpoint: minio-service.kubeflow:9000
+          insecure: true
+          key: runs/{{workflow.uid}}/{{pod.name}}/mlpipeline-ui-metadata.tgz
+          secretKeySecret:
+            key: secretkey
+            name: mlpipeline-minio-artifact
+      - name: mlpipeline-metrics
+        path: /mlpipeline-metrics.json
+        s3:
+          accessKeySecret:
+            key: accesskey
+            name: mlpipeline-minio-artifact
+          bucket: mlpipeline
+          endpoint: minio-service.kubeflow:9000
+          insecure: true
+          key: runs/{{workflow.uid}}/{{pod.name}}/mlpipeline-metrics.tgz
+          secretKeySecret:
+            key: secretkey
+            name: mlpipeline-minio-artifact
+      parameters:
+      - name: prediction-prediction
+        valueFrom:
+          path: /output.txt
+  - container:
+      args:
+      - --train
+      - '{{inputs.parameters.train}}'
+      - --eval
+      - '{{inputs.parameters.evaluation}}'
+      - --schema
+      - '{{inputs.parameters.validation-schema}}'
+      - --project
+      - '{{inputs.parameters.project}}'
+      - --mode
+      - '{{inputs.parameters.mode}}'
+      - --preprocessing-module
+      - '{{inputs.parameters.preprocess-module}}'
+      - --output
+      - '{{inputs.parameters.output}}/{{workflow.name}}/transformed'
+      env:
+      - name: GOOGLE_APPLICATION_CREDENTIALS
+        value: /secret/gcp-credentials/user-gcp-sa.json
+      - name: CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE
+        value: /secret/gcp-credentials/user-gcp-sa.json
+      image: gcr.io/ml-pipeline/ml-pipeline-dataflow-tft:6ad2601ec7d04e842c212c50d5c78e548e12ddea
+      volumeMounts:
+      - mountPath: /secret/gcp-credentials
+        name: gcp-credentials
+    inputs:
+      parameters:
+      - name: evaluation
+      - name: mode
+      - name: output
+      - name: preprocess-module
+      - name: project
+      - name: train
+      - name: validation-schema
+    name: preprocess
+    outputs:
+      artifacts:
+      - name: mlpipeline-ui-metadata
+        path: /mlpipeline-ui-metadata.json
+        s3:
+          accessKeySecret:
+            key: accesskey
+            name: mlpipeline-minio-artifact
+          bucket: mlpipeline
+          endpoint: minio-service.kubeflow:9000
+          insecure: true
+          key: runs/{{workflow.uid}}/{{pod.name}}/mlpipeline-ui-metadata.tgz
+          secretKeySecret:
+            key: secretkey
+            name: mlpipeline-minio-artifact
+      - name: mlpipeline-metrics
+        path: /mlpipeline-metrics.json
+        s3:
+          accessKeySecret:
+            key: accesskey
+            name: mlpipeline-minio-artifact
+          bucket: mlpipeline
+          endpoint: minio-service.kubeflow:9000
+          insecure: true
+          key: runs/{{workflow.uid}}/{{pod.name}}/mlpipeline-metrics.tgz
+          secretKeySecret:
+            key: secretkey
+            name: mlpipeline-minio-artifact
+      parameters:
+      - name: preprocess-transformed
+        valueFrom:
+          path: /output.txt
+  - container:
+      args:
+      - --output
+      - '{{inputs.parameters.output}}/{{workflow.name}}/roc'
+      - --predictions
+      - '{{inputs.parameters.prediction-prediction}}'
+      - --target_lambda
+      - 'lambda x: 1 if (x[''target''] > x[''fare''] * 0.2) else 0'
+      env:
+      - name: GOOGLE_APPLICATION_CREDENTIALS
+        value: /secret/gcp-credentials/user-gcp-sa.json
+      - name: CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE
+        value: /secret/gcp-credentials/user-gcp-sa.json
+      image: gcr.io/ml-pipeline/ml-pipeline-local-roc:5df2cdc1ed145320204e8bc73b59cdbd7b3da28f
+      volumeMounts:
+      - mountPath: /secret/gcp-credentials
+        name: gcp-credentials
+    inputs:
+      parameters:
+      - name: output
+      - name: prediction-prediction
+    name: roc
+    outputs:
+      artifacts:
+      - name: mlpipeline-ui-metadata
+        path: /mlpipeline-ui-metadata.json
+        s3:
+          accessKeySecret:
+            key: accesskey
+            name: mlpipeline-minio-artifact
+          bucket: mlpipeline
+          endpoint: minio-service.kubeflow:9000
+          insecure: true
+          key: runs/{{workflow.uid}}/{{pod.name}}/mlpipeline-ui-metadata.tgz
+          secretKeySecret:
+            key: secretkey
+            name: mlpipeline-minio-artifact
+      - name: mlpipeline-metrics
+        path: /mlpipeline-metrics.json
+        s3:
+          accessKeySecret:
+            key: accesskey
+            name: mlpipeline-minio-artifact
+          bucket: mlpipeline
+          endpoint: minio-service.kubeflow:9000
+          insecure: true
+          key: runs/{{workflow.uid}}/{{pod.name}}/mlpipeline-metrics.tgz
+          secretKeySecret:
+            key: secretkey
+            name: mlpipeline-minio-artifact
+  - dag:
+      tasks:
+      - arguments:
+          parameters:
+          - name: analyze-slice-column
+            value: '{{inputs.parameters.analyze-slice-column}}'
+          - name: evaluation
+            value: '{{inputs.parameters.evaluation}}'
+          - name: mode
+            value: '{{inputs.parameters.mode}}'
+          - name: output
+            value: '{{inputs.parameters.output}}'
+          - name: project
+            value: '{{inputs.parameters.project}}'
+          - name: training-train
+            value: '{{tasks.training.outputs.parameters.training-train}}'
+          - name: validation-schema
+            value: '{{tasks.validation.outputs.parameters.validation-schema}}'
+        dependencies:
+        - training
+        - validation
+        name: analysis
+        template: analysis
+      - arguments:
+          parameters:
+          - name: output
+            value: '{{inputs.parameters.output}}'
+          - name: prediction-prediction
+            value: '{{tasks.prediction.outputs.parameters.prediction-prediction}}'
+        dependencies:
+        - prediction
+        name: confusion-matrix
+        template: confusion-matrix
+      - arguments:
+          parameters:
+          - name: training-train
+            value: '{{tasks.training.outputs.parameters.training-train}}'
+        dependencies:
+        - training
+        name: deploy
+        template: deploy
+      - arguments:
+          parameters:
+          - name: evaluation
+            value: '{{inputs.parameters.evaluation}}'
+          - name: mode
+            value: '{{inputs.parameters.mode}}'
+          - name: output
+            value: '{{inputs.parameters.output}}'
+          - name: project
+            value: '{{inputs.parameters.project}}'
+          - name: training-train
+            value: '{{tasks.training.outputs.parameters.training-train}}'
+          - name: validation-schema
+            value: '{{tasks.validation.outputs.parameters.validation-schema}}'
+        dependencies:
+        - training
+        - validation
+        name: prediction
+        template: prediction
+      - arguments:
+          parameters:
+          - name: evaluation
+            value: '{{inputs.parameters.evaluation}}'
+          - name: mode
+            value: '{{inputs.parameters.mode}}'
+          - name: output
+            value: '{{inputs.parameters.output}}'
+          - name: preprocess-module
+            value: '{{inputs.parameters.preprocess-module}}'
+          - name: project
+            value: '{{inputs.parameters.project}}'
+          - name: train
+            value: '{{inputs.parameters.train}}'
+          - name: validation-schema
+            value: '{{tasks.validation.outputs.parameters.validation-schema}}'
+        dependencies:
+        - validation
+        name: preprocess
+        template: preprocess
+      - arguments:
+          parameters:
+          - name: output
+            value: '{{inputs.parameters.output}}'
+          - name: prediction-prediction
+            value: '{{tasks.prediction.outputs.parameters.prediction-prediction}}'
+        dependencies:
+        - prediction
+        name: roc
+        template: roc
+      - arguments:
+          parameters:
+          - name: hidden-layer-size
+            value: '{{inputs.parameters.hidden-layer-size}}'
+          - name: learning-rate
+            value: '{{inputs.parameters.learning-rate}}'
+          - name: output
+            value: '{{inputs.parameters.output}}'
+          - name: preprocess-module
+            value: '{{inputs.parameters.preprocess-module}}'
+          - name: preprocess-transformed
+            value: '{{tasks.preprocess.outputs.parameters.preprocess-transformed}}'
+          - name: steps
+            value: '{{inputs.parameters.steps}}'
+          - name: validation-schema
+            value: '{{tasks.validation.outputs.parameters.validation-schema}}'
+        dependencies:
+        - preprocess
+        - validation
+        name: training
+        template: training
+      - arguments:
+          parameters:
+          - name: column-names
+            value: '{{inputs.parameters.column-names}}'
+          - name: evaluation
+            value: '{{inputs.parameters.evaluation}}'
+          - name: key-columns
+            value: '{{inputs.parameters.key-columns}}'
+          - name: mode
+            value: '{{inputs.parameters.mode}}'
+          - name: output
+            value: '{{inputs.parameters.output}}'
+          - name: project
+            value: '{{inputs.parameters.project}}'
+          - name: train
+            value: '{{inputs.parameters.train}}'
+        name: validation
+        template: validation
+    inputs:
+      parameters:
+      - name: analyze-slice-column
+      - name: column-names
+      - name: evaluation
+      - name: hidden-layer-size
+      - name: key-columns
+      - name: learning-rate
+      - name: mode
+      - name: output
+      - name: preprocess-module
+      - name: project
+      - name: steps
+      - name: train
+    name: tfx-taxi-cab-classification-pipeline-example
+  - container:
+      args:
+      - --transformed-data-dir
+      - '{{inputs.parameters.preprocess-transformed}}'
+      - --schema
+      - '{{inputs.parameters.validation-schema}}'
+      - --learning-rate
+      - '{{inputs.parameters.learning-rate}}'
+      - --hidden-layer-size
+      - '{{inputs.parameters.hidden-layer-size}}'
+      - --steps
+      - '{{inputs.parameters.steps}}'
+      - --target
+      - tips
+      - --preprocessing-module
+      - '{{inputs.parameters.preprocess-module}}'
+      - --job-dir
+      - '{{inputs.parameters.output}}/{{workflow.name}}/train'
+      env:
+      - name: GOOGLE_APPLICATION_CREDENTIALS
+        value: /secret/gcp-credentials/user-gcp-sa.json
+      - name: CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE
+        value: /secret/gcp-credentials/user-gcp-sa.json
+      image: gcr.io/ml-pipeline/ml-pipeline-kubeflow-tf-trainer:5df2cdc1ed145320204e8bc73b59cdbd7b3da28f
+      volumeMounts:
+      - mountPath: /secret/gcp-credentials
+        name: gcp-credentials
+    inputs:
+      parameters:
+      - name: hidden-layer-size
+      - name: learning-rate
+      - name: output
+      - name: preprocess-module
+      - name: preprocess-transformed
+      - name: steps
+      - name: validation-schema
+    name: training
+    outputs:
+      artifacts:
+      - name: mlpipeline-ui-metadata
+        path: /mlpipeline-ui-metadata.json
+        s3:
+          accessKeySecret:
+            key: accesskey
+            name: mlpipeline-minio-artifact
+          bucket: mlpipeline
+          endpoint: minio-service.kubeflow:9000
+          insecure: true
+          key: runs/{{workflow.uid}}/{{pod.name}}/mlpipeline-ui-metadata.tgz
+          secretKeySecret:
+            key: secretkey
+            name: mlpipeline-minio-artifact
+      - name: mlpipeline-metrics
+        path: /mlpipeline-metrics.json
+        s3:
+          accessKeySecret:
+            key: accesskey
+            name: mlpipeline-minio-artifact
+          bucket: mlpipeline
+          endpoint: minio-service.kubeflow:9000
+          insecure: true
+          key: runs/{{workflow.uid}}/{{pod.name}}/mlpipeline-metrics.tgz
+          secretKeySecret:
+            key: secretkey
+            name: mlpipeline-minio-artifact
+      parameters:
+      - name: training-train
+        valueFrom:
+          path: /output.txt
+  - container:
+      args:
+      - --csv-data-for-inference
+      - '{{inputs.parameters.train}}'
+      - --csv-data-to-validate
+      - '{{inputs.parameters.evaluation}}'
+      - --column-names
+      - '{{inputs.parameters.column-names}}'
+      - --key-columns
+      - '{{inputs.parameters.key-columns}}'
+      - --project
+      - '{{inputs.parameters.project}}'
+      - --mode
+      - '{{inputs.parameters.mode}}'
+      - --output
+      - '{{inputs.parameters.output}}/{{workflow.name}}/validation'
+      env:
+      - name: GOOGLE_APPLICATION_CREDENTIALS
+        value: /secret/gcp-credentials/user-gcp-sa.json
+      - name: CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE
+        value: /secret/gcp-credentials/user-gcp-sa.json
+      image: gcr.io/ml-pipeline/ml-pipeline-dataflow-tfdv:6ad2601ec7d04e842c212c50d5c78e548e12ddea
+      volumeMounts:
+      - mountPath: /secret/gcp-credentials
+        name: gcp-credentials
+    inputs:
+      parameters:
+      - name: column-names
+      - name: evaluation
+      - name: key-columns
+      - name: mode
+      - name: output
+      - name: project
+      - name: train
+    name: validation
+    outputs:
+      artifacts:
+      - name: mlpipeline-ui-metadata
+        path: /mlpipeline-ui-metadata.json
+        s3:
+          accessKeySecret:
+            key: accesskey
+            name: mlpipeline-minio-artifact
+          bucket: mlpipeline
+          endpoint: minio-service.kubeflow:9000
+          insecure: true
+          key: runs/{{workflow.uid}}/{{pod.name}}/mlpipeline-ui-metadata.tgz
+          secretKeySecret:
+            key: secretkey
+            name: mlpipeline-minio-artifact
+      - name: mlpipeline-metrics
+        path: /mlpipeline-metrics.json
+        s3:
+          accessKeySecret:
+            key: accesskey
+            name: mlpipeline-minio-artifact
+          bucket: mlpipeline
+          endpoint: minio-service.kubeflow:9000
+          insecure: true
+          key: runs/{{workflow.uid}}/{{pod.name}}/mlpipeline-metrics.tgz
+          secretKeySecret:
+            key: secretkey
+            name: mlpipeline-minio-artifact
+      parameters:
+      - name: validation-schema
+        valueFrom:
+          path: /schema.txt
+      - name: validation-validation
+        valueFrom:
+          path: /output_validation_result.txt
+  volumes:
+  - name: gcp-credentials
+    secret:
+      secretName: user-gcp-sa

@@ -1,6 +1,6 @@
 FROM tensorflow/tensorflow:1.13.1-py3
 
-MAINTAINER Nonato, Fabio <fabio.nonato@bhge.com>
+MAINTAINER Fabio Nonato <https://github.com/fabiononato>
 
 ARG http_proxy
 ARG https_proxy

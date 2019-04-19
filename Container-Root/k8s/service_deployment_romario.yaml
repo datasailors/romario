@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
       - name: romario-deployed
-        image: registry.demo.bhge.ai/dsa/demo/romario:devel
+        image: bhgedigital/romario:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 6966
