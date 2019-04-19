@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: romario
+  name: romario
+spec:
+  ports:
+  - name: "upload-port"
+    port: 6966
+    targetPort: 6966
+    nodePort: 30966
+  selector:
+    app: romario
+  type: NodePort
+---
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: romario-deployment
+spec:
+  selector:
+    matchLabels:
+      app: romario
+  replicas: 1 # tells deployment to run 1 pods matching the template
+  template:
+    metadata:
+      labels:
+        app: romario
+    spec:
+      containers:
+      - name: romario-deployed
+        image: registry.demo.bhge.ai/dsa/demo/romario:devel
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 6966
+      imagePullSecrets:
+      - name: bhgecred

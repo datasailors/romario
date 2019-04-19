@@ -1,0 +1,11 @@
+werkzeug
+tornado==5.1.1
+jupyter
+jupyterlab
+plotly
+seaborn
+pydoe
+Flask==1.0.2
+flasgger==0.9.1
+requests==2.19.1
+cherrypy==17.4.0
