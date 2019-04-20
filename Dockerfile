@@ -5,7 +5,7 @@ MAINTAINER Fabio Nonato <https://github.com/fabiononato>
 ARG http_proxy
 ARG https_proxy
 ARG no_proxy
-ARG KFP_PACKAGE
+ENV KFP_PACKAGE="https://storage.googleapis.com/ml-pipeline/release/0.1.4/kfp.tar.gz"
 
 ADD Container-Root /
 
