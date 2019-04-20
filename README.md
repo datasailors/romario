@@ -1,14 +1,14 @@
 # Romario
 
-_"You give it the ball... it will score!" - Romario, a RESTful API for kick-starting a [Kubeflow Pipelines](https://github.com/kubeflow/pipelines) in your Kubernetes cluster._
+_"You give it the ball... it will score!" - Romario, a RESTful API for kick-starting [Kubeflow Pipelines](https://github.com/kubeflow/pipelines) in your Kubernetes cluster._
 
-The intent of _romario_ is to enable large scale deployments of _KF Pipelines_ runs, across multiple Kubernetes clusters. _KF Pipelines_ are a key way to "pythonically" orchestrate analytics pipelines, due to its straightforward abstraction of [ARGO](https://github.com/argoproj) into a Python based DSL.
+The intent of _romario_ is to enable large scale runs of _KF Pipelines_, across multiple Kubernetes clusters. _KF Pipelines_ are a key way to "pythonically" orchestrate analytics pipelines, due to its straightforward abstraction of [ARGO](https://github.com/argoproj) into a Python based DSL.
 
-For the background on the scale required for Industrial applications of ML and AI please check [this](https://www.youtube.com/watch?v=rJNSdUjjkic) and [this](https://www.youtube.com/watch?v=dIZt-Ahzew0) talks from Google Cloud NEXT 2019.
+For the background on the scale required for Industrial applications of ML and AI please check [this](https://www.youtube.com/watch?v=rJNSdUjjkic) and [this](https://www.youtube.com/watch?v=dIZt-Ahzew0) talk from Google Cloud NEXT 2019.
 
 ## Documentation
 
-[romario](https://github.com/bhgedigital/romario) provides a REST API, for executing the most usual operations performed by [KF Pipelines](https://github.com/kubeflow/pipelines).
+[Romario](https://github.com/bhgedigital/romario) provides a REST API, for executing the most usual operations performed by [KF Pipelines](https://github.com/kubeflow/pipelines).
 
 ### Building the _Romario_ Project
 
