@@ -95,7 +95,7 @@ def test_run_pipeline():
 		ran = run_rom_pipeline(pipeline_path=filename,
 			client=client,
 			experiment=exp)
-		returning = returning + 'Success!! - your pipeline should be runing by now!\n\n'
+		returning = returning + 'Success!! - your pipeline should be running by now!\n\n'
 	except:
 		returning = 'Failed: Run creation failed!\n\n'
 		raise Exception(returning)
