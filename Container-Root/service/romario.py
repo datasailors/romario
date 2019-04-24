@@ -58,16 +58,8 @@ def run_rom_pipeline(pipeline_name='romario_pipeline_run_1',
 # TODO: implement a tar for a given YAML
 
 # Compile
-# TODO: Provide a server to compile an python script pipeline
-"""
-hypertune_loops_dag is a relative import...
-So the pipeline would need to be a function... not an instance of a python objec.
+# TODO: Provide a server to compile a python script pipeline
 
-It would record it locally
-
-CMD: compiler.Compiler().compile(hypertune_loops_dag,  'hypertune.tar.gz')
-
-"""
 @app.route("/")
 def hello_world():
 	return "Hello World"
@@ -81,44 +73,6 @@ def print_filename():
 		returning = fin.read()
 	return returning
 
-@app.route("/test_create_client", methods=['POST','PUT'])
-def test_create_client():
-	file = request.files['file']
-	filename=secure_filename(file.filename)
-	file.save(filename)
-	with open(filename, 'r') as fin:
-		returning = fin.read()
-	try:
-		client = create_rom_client()
-		returning = 'Success!!'
-	except:
-		returning = 'Failed: Client creation not working!\n\n'
-		raise Exception(returning)
-
-	return returning
-
-@app.route("/test_create_exp", methods=['POST','PUT'])
-def test_create_exp():
-	file = request.files['file']
-	filename=secure_filename(file.filename)
-	file.save(filename)
-	with open(filename, 'r') as fin:
-		returning = fin.read()
-	try:
-		client = create_rom_client()
-		returning = 'Success!!'
-	except:
-		returning = 'Failed: Client creation not working!\n\n'
-		raise Exception(returning)
-	try:
-		exp = create_rom_experiment(client=client)
-		returning = 'Success!!'
-	except:
-		returning = 'Failed: Experiment creation Failed!\n\n'
-		raise Exception(returning)
-
-	return returning
-
 @app.route("/test_run_pipeline", methods=['POST','PUT'])
 def test_run_pipeline():
 	file = request.files['file']
@@ -126,13 +80,13 @@ def test_run_pipeline():
 	file.save(filename)
 	try:
 		client = create_rom_client()
-		returning = 'Success!!'
+		returning = 'Success!! - KF client was created\n\n'
 	except:
 		returning = 'Failed: Client creation not working!\n\n'
 		raise Exception(returning)
 	try:
 		exp = create_rom_experiment(client=client)
-		returning = 'Success!!'
+		returning = returning + 'Success!! - Experiment was created'
 	except:
 		returning = 'Failed: Experiment creation Failed!\n\n'
 		raise Exception(returning)
@@ -141,7 +95,7 @@ def test_run_pipeline():
 		ran = run_rom_pipeline(pipeline_path=filename,
 			client=client,
 			experiment=exp)
-		returning = 'Success!! - your pipeline should be runing by now!\n\n'
+		returning = returning + 'Success!! - your pipeline should be runing by now!\n\n'
 	except:
 		returning = 'Failed: Run creation failed!\n\n'
 		raise Exception(returning)
