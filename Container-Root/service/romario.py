@@ -4,10 +4,12 @@ import kfp.dsl as dsl
 from kfp.gcp import use_gcp_secret
 from kubernetes import client as k8s_client
 from flask import Flask, request
+from flasgger import Swagger
 from werkzeug.utils import secure_filename
 import datetime
 
 app = Flask(__name__)
+Swagger(app)
 
 def create_rom_client():
 	# Defining a client
@@ -27,7 +29,7 @@ def create_rom_experiment(experiment_name = 'romario_test',client=None):
 
 	return exp
 
-def run_rom_pipeline(pipeline_name='romario_pipeline_run_1',
+def run_rom_pipeline(pipeline_name='romario_pipeline_run_',
 					pipeline_path=None,
 					client=None,
 					experiment=None,
@@ -86,7 +88,7 @@ def test_run_pipeline():
 		raise Exception(returning)
 	try:
 		exp = create_rom_experiment(client=client)
-		returning = returning + 'Success!! - Experiment was created'
+		returning = returning + 'Success!! - Experiment was created\n\n'
 	except:
 		returning = 'Failed: Experiment creation Failed!\n\n'
 		raise Exception(returning)
