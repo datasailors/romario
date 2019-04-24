@@ -64,7 +64,9 @@ def run_rom_pipeline(pipeline_name='romario_pipeline_run_',
 
 @app.route("/")
 def hello_world():
-	return "Hello World"
+	with open('romarioArt.txt', 'r') as fin:
+		returning = fin.read()
+	return returning
 
 @app.route("/print_filename", methods=['POST','PUT'])
 def print_filename():
