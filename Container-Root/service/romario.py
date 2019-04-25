@@ -63,7 +63,7 @@ def run_rom_pipeline(pipeline_name='romario_pipeline_run_',
 # Compile
 # TODO: Provide a server to compile a python script pipeline
 
-@app.route("/hello_romario")
+@app.route("/")
 def hello_romario():
     """
     Hello World, from Romario
