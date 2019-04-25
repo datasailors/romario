@@ -31,7 +31,7 @@ Executing a simple pipeline is easy from the Master node of the underlying Kuber
 ./Container-Root/test/post_k8s_run_test.sh Container-Root/pipelines/SampleBasic-Condition.yaml.tar.gz
 ```
 
-A [Swagger-UI](https://swagger.io/tools/swagger-ui/) is currently under-construction, stay tuned!   
+A [Swagger-UI](https://swagger.io/tools/swagger-ui/) is available at https://<romario-endpoint>/apidocs .   
 
 ### Running _romario_ image as a Jupyter Notebook server
 
