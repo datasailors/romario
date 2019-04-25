@@ -10,6 +10,8 @@ For the background on the scale required for Industrial applications of ML and A
 
 [Romario](https://github.com/bhgedigital/romario) provides a REST API, for executing the most usual operations performed by [KF Pipelines](https://github.com/kubeflow/pipelines).
 
+A walkthrough of Romario is provided here: [Doc](https://github.com/bhgedigital/romario/blob/master/Container-Root/test/doc/romario_demo_walkthrough.md)
+
 ### Building the _Romario_ Project
 
 As any [Depend-on-Docker](https://github.com/bhgedigital/depend-on-docker) project, building _Romario_ is quite easy. Once the `.env` environment file is set, it is enough to execute `build.sh`. Please refer to the [Depend-on-Docker Documentation](https://github.com/bhgedigital/depend-on-docker/blob/master/README.md) for more information on how to customize _Romario_.
