@@ -1,12 +1,12 @@
-# Demo Docker Con Steps:
+# Walkthrough DockerCon19 Demo:
 
-- 1st bash:
+On your the management node of the GKE cluster:
 
 `watch -n 1 kubectl get pods`
 
 ![watch](watchkctlgetpods.png)
 
-- 2nd bash / From Romario root folder:
+At the root of _romario_ repo:
 
 `ll`
 
