@@ -93,7 +93,7 @@ def test_run_pipeline():
     This is the test POST that runs a tar.gz Pipeline in your cluster
     ---
     parameters:
-      - name: Pipeline file
+      - name: file
         description: The only required information is the tar.gz file for romario to run.
         in: formData
         required: true
