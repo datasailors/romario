@@ -1,3 +1,6 @@
+
+<img alt="Romario v0.1.1 Logo" src="romarioLogo.png" align="right" width="25%"/>
+
 # Romario
 
 _"You give it the ball... it will score!" - Romario, a RESTful API for kick-starting [Kubeflow Pipelines](https://github.com/kubeflow/pipelines) in your Kubernetes cluster._

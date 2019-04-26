@@ -15,4 +15,4 @@ chmod +x ./kubectl
 
 mv ./kubectl /usr/local/bin/kubectl
 
-
+echo "cat /service/romarioArt.txt" >> ~/.bashrc
