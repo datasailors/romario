@@ -1,59 +1,56 @@
 # Walkthrough DockerCon19 Demo:
 
-On your the management node of the GKE cluster:
+On the management node of your Kubernetes cluster you can get all functionalities of romario simply by running the bhgedigital/romario image.
 
-`watch -n 1 kubectl get pods`
+As romario is a Depend-on-Docker project, RUNs and EXECs are all automated. From the root of the romario repo, just execute:
 
-![watch](watchkctlgetpods.png)
+`./run.sh bash`
 
-At the root of _romario_ repo:
+![Run Romario from Mgmt](runRomarioContainer.png)
 
-`ll`
+Commands can be executed externally to the container, such as watching for the pods in the cluster. From the root of the romario repo at the management node, just execute:
 
-Romario is a typical Depend-on-docker project, where all code is contained in Container-Root, and we have all required automation to build and manage the project
+`./exec.sh watch kubectl get pods`
 
-`cd Container-Root/k8s/`
+![Now, our watch begins](watchkctlgetpods.png)
 
-For the deployment, we've automated some of the most usual kubectl commands, and the deployment itself, so it become seamless if you have access to the management node in your cluster.
+Romario is a typical Depend-on-docker project, where all code is contained in `/` , and we have all required automation to deploy and manage the service. From the container `bash`, we can list the scripts used for the automation:
+
+`cd k8s/ && ls -al`
+
+![romario Automation scripts](romarioAutomation.png)
+
+To deploy _romario_ simply execute:
 
 `./deploy_romario_from_mgmt.sh`
 
-![watch](deployRomario.png)
+![Deployment of Romario](deployRomario.png)
 
 And you'll get a new service up on the cluster:
 
-![watch](newRomario.png)
+![Romario Deployed](newRomario.png)
 
-The service itself is very lightweight, so it should not take too long to stand up. Once up we can use the testings scripts to try out some pipelines.
+The service itself is very lightweight, so it should not take long to stand up. Once up, we can use the testings scripts to try out some pipelines.
 
-`cd .. && ll`
+```
+cd /
+ll pipelines/  
+ll test/
+```
 
-`ll pipelines/`  
+![Available Pipelines](gitLL.png)
 
-`ll test/`
+A Swagger UI is also available through _https://<romario_end_point>/apidocs_
 
-![watch](gitLL.png)
+The POST command is automated in the test script `post_k8s_run_test.sh`. With it we can run larger workloads, as large as your compiled pipeline, as long as you define and tar it:
 
-The POST command is automated in the test script:
+`./test/post_k8s_run_test.sh pipelines/run_dag_test_cli.yaml.tar.gz`
 
-`cat ./test/post_k8s_run_test.sh`
+![Posting the tarball](testPost.png)
 
-![watch](catPOST.png)
+![Creating the pipeline Pods](hypertunePods.png)
 
-Which can be used to run a basic sample pipeline that comes with KF installation:
-
-`./test/post_k8s_run_test.sh ./pipelines/SampleBasic-Condition.yaml.tar.gz`
-![watch](samplePods.png)
-![watch](sampleComplete.png)
-
-We can also run larger workloads, as large as your defined pipeline, as long as you define and tar it:
-
-`./test/post_k8s_run_test.sh ./pipelines/run_dag_test_cli.yaml.tar.gz`
-![watch](hypertunePods.png)
-![watch](hypertuneRun.png)
-![watch](hypertuneComplete.png)
-
-Romario is a small, lightweight service, running at the right place at the right time. If you pass it the ball, it will run it!
+![Executing a Large Pipeline](largePipelineRun.gif)
 
 Once done we can clean the used pods:
 
@@ -63,16 +60,23 @@ or even kill the service as a whole:
 
 `./k8s/kill_romario.sh`
 
+> __Romario is a small, lightweight service, running at the right place at the right time. If you pass it the ball, it will run it!__
 
 ```bash
-  ___________________________
- |             |             |
- |___          |          ___|
- |_  |         |         |  _|
-.| | |.       ,|.       .| | |.
-|| | | )     ( | )     ( | | ||
-'|_| |'       `|'       `| |_|'
- |___|         |         |___|
- |             |             |
- |_____________|_____________|
+|                                                 |
+|       ___                      _                |
+|      / _ \___  __ _  ___ _____(_)__             |
+|     / , _/ _ \/  ' \/ _ `/ __/ / _ \            |
+|    /_/|_|\___/_/_/_/\_,_/_/ /_/\___/  v0.1.1    |
+|                                                 |
+|          ___________________________            |
+|         |             |             |           |
+|         |___          |          ___|           |
+|         |_  |         |         |  _|           |
+|        .| | |.       ,|.       .| | |.          |
+|        || | | )     ( | )     ( | | ||          |
+|        '|_| |'       `|'       `| |_|'          |
+|         |___|         |         |___|           |
+|         |             |             |           |
+|         |_____________|_____________|           |
 ```
