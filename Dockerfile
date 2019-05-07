@@ -1,11 +1,12 @@
-FROM tensorflow/tensorflow:1.13.1-py3
+#FROM tensorflow/tensorflow:1.13.1-py3
+FROM python:3.6
 
 MAINTAINER Fabio Nonato <https://github.com/fabiononato>
 
 ARG http_proxy
 ARG https_proxy
 ARG no_proxy
-ENV KFP_PACKAGE="https://storage.googleapis.com/ml-pipeline/release/0.1.4/kfp.tar.gz"
+ENV KFP_PACKAGE="https://storage.googleapis.com/ml-pipeline/release/0.1.18/kfp.tar.gz"
 
 ADD Container-Root /
 

@@ -30,7 +30,8 @@ spec:
     spec:
       containers:
       - name: romario-deployed
-        image: bhgedigital/romario:latest
+        # image: bhgedigital/romario:latest
+        image: bhgedigital/romario:devel
         imagePullPolicy: Always
         ports:
         - containerPort: 6966
