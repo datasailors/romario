@@ -6,29 +6,29 @@ As romario is a Depend-on-Docker project, RUNs and EXECs are all automated. From
 
 `./run.sh bash`
 
-![Run Romario from Mgmt](runRomarioContainer.png)
+![Run Romario from Mgmt](images/runRomarioContainer.png)
 
 Commands can be executed externally to the container, such as watching for the pods in the cluster. From the root of the romario repo at the management node, just execute:
 
 `./exec.sh watch kubectl get pods`
 
-![Now, our watch begins](watchkctlgetpods.png)
+![Now, our watch begins](images/watchkctlgetpods.png)
 
 Romario is a typical Depend-on-docker project, where all code is contained in `/` , and we have all required automation to deploy and manage the service. From the container `bash`, we can list the scripts used for the automation:
 
 `cd k8s/ && ls -al`
 
-![romario Automation scripts](romarioAutomation.png)
+![romario Automation scripts](images/romarioAutomation.png)
 
 To deploy _romario_ simply execute:
 
 `./deploy_romario_from_mgmt.sh`
 
-![Deployment of Romario](deployRomario.png)
+![Deployment of Romario](images/deployRomario.png)
 
 And you'll get a new service up on the cluster:
 
-![Romario Deployed](newRomario.png)
+![Romario Deployed](images/newRomario.png)
 
 The service itself is very lightweight, so it should not take long to stand up. Once up, we can use the testings scripts to try out some pipelines.
 
@@ -38,7 +38,7 @@ ll pipelines/
 ll test/
 ```
 
-![Available Pipelines](gitLL.png)
+![Available Pipelines](images/gitLL.png)
 
 A Swagger UI is also available through _https://<romario_end_point>/apidocs_
 
@@ -46,11 +46,11 @@ The POST command is automated in the test script `post_k8s_run_test.sh`. With it
 
 `./test/post_k8s_run_test.sh pipelines/run_dag_test_cli.yaml.tar.gz`
 
-![Posting the tarball](testPost.png)
+![Posting the tarball](images/testPost.png)
 
-![Creating the pipeline Pods](hypertunePods.png)
+![Creating the pipeline Pods](images/hypertunePods.png)
 
-![Executing a Large Pipeline](largePipelineRun.gif)
+![Executing a Large Pipeline](images/largePipelineRun.gif)
 
 Once done we can clean the used pods:
 
