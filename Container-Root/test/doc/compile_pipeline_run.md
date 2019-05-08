@@ -14,7 +14,7 @@ In this context, the managing node under the `MGMT_NODE_IP` is the node used to 
 
 If working on the managing node, the endpoint of the romario's pod is accessible directly and the `post_k8s_run_test.sh` script takes care of finding where to POST the file. An URL pointing to this endpoint can be provided, however is not recommended to be exposed to the public internet.
 
-### Compiling and posting in a single line:
+## Compiling and running pipeline with single lines:
 
 From your local working clone of the [romario repo](http://github.com/bhgedigital/romario), start a romario container with `run.sh`
 
@@ -23,7 +23,8 @@ Compile the pipeline within the container:
 ```sh
 ./exec.sh python /wd/Container-Root/pipelines/recursive_while.py
 ```
-curl from __localhost__ into mapped port:
+
+curl from __localhost__ into mapped port for execution:
 
 ```sh
 ./Container-root/test/local_post_k8s_run_test.sh Container-Root/pipelines/recursive_while.py.tar.gz
