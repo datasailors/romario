@@ -54,14 +54,7 @@ This script will map the whole _romario_ root to `/wd`, allowing for the user to
 
 ## DockerCon 2019 - Depend on Docker for AI @ the Community Theather
 
-<div class="video-player"><div class="vidyard-player-container" uuid="LceAwJ7hDuXMLjE2frPe5U" style="margin: auto; width: 100%; height: auto; overflow: hidden; display: block;"><div class="vidyard-div-LceAwJ7hDuXMLjE2frPe5U" role="application" aria-label="media player" style="position: relative; padding-bottom: 56.25%; height: 0px; overflow: hidden; max-width: 100%;"><iframe allow="autoplay *; fullscreen *; picture-in-picture *" allowfullscreen="" allowtransparency="true" aria-label="Video" class="vidyard-iframe-LceAwJ7hDuXMLjE2frPe5U bf_frame_init" frameborder="0" height="100%" width="100%" scrolling="no" src="https://play.vidyard.com/LceAwJ7hDuXMLjE2frPe5U?v=4.2.11&amp;type=inline&amp;disable_popouts=1" title="Video" style="opacity: 1; background-color: transparent; position: absolute; top: 0px; left: 0px;" bf_offer_id="1385279605"></iframe></div></div><img alt="" class="vidyard-player-embed" data-uuid="LceAwJ7hDuXMLjE2frPe5U" data-v="4" data-type="inline" data-rendered="true" style="display: none;"><h3>Depend Upon Docker for AI</h3><div class="description">
-                            This is the next chapter of the “Depend on Docker” series of talks that started right here at DockerCon 2018 when Alex Iankoulski (Docker Captain) and Arun Subramaniyan (VP Data Science and Analytics), BHGE presented “Depend on Docker - Imagine a world where the only dependency you need is Docker”. True to that title, followed a few talks that focused on running workloads on AWS, GCP, and Azure with Docker being the only external dependency. This talk will focus on using Docker containers in the world of Data Science, Machine Learning, and Artificial Intelligence. If you are curious about techniques to increase your processing power with GPUs and are eager to see some cool Industrial AI demos, all running in Docker, join us for this talk at DockerCon 2019!
-
-Speakers:
-Fabio Nonato de Paula - Director, Data &amp; Analytics, Baker Hughes, a GE company
-Alex Iankoulski - Principal Architect - Data Science and Analytics, Baker Hughes, a GE company                        </div></div>
-
-
+[![DockerCon Video](Container-Root/test/doc/images/dockerConVideo.png)](https://play.vidyard.com/LceAwJ7hDuXMLjE2frPe5U?v=4.2.11&amp;type=inline&amp;disable_popouts=1)
 
 ## Disclosures & Acknowledgments
 
